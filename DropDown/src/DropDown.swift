@@ -16,6 +16,10 @@ public typealias ConfigurationClosure = (Index, String) -> String
 public typealias CellConfigurationClosure = (Index, String, DropDownCell) -> Void
 private typealias ComputeLayoutTuple = (x: CGFloat, y: CGFloat, width: CGFloat, offscreenHeight: CGFloat)
 
+public protocol DropDownCellDelegate: AnyObject {
+    func dropDownTableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> DropDownCell
+}
+
 /// Can be `UIView` or `UIBarButtonItem`.
 @objc
 public protocol AnchorView: class {
@@ -440,6 +444,8 @@ public final class DropDown: UIView {
 		}
 	}
 
+    public weak var cellDelegate: DropDownCellDelegate?
+
 	fileprivate var minHeight: CGFloat {
 		return tableView.rowHeight
 	}
@@ -497,6 +503,9 @@ public final class DropDown: UIView {
 		setup()
 	}
 
+    public func register(nib: UINib, forReuseIdentifier reuseIdentifier: String) {
+        tableView.register(nib, forCellReuseIdentifier: reuseIdentifier)
+    }
 }
 
 //MARK: - Setup
@@ -1048,13 +1057,17 @@ extension DropDown: UITableViewDataSource, UITableViewDelegate {
 		return dataSource.count
 	}
 
-	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let cell = tableView.dequeueReusableCell(withIdentifier: DPDConstant.ReusableIdentifier.DropDownCell, for: indexPath) as! DropDownCell
-		let index = (indexPath as NSIndexPath).row
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell: DropDownCell
+        if let delegate = cellDelegate {
+            cell = delegate.dropDownTableView(tableView, cellForRowAt: indexPath)
+        } else {
+            cell = tableView.dequeueReusableCell(withIdentifier: DPDConstant.ReusableIdentifier.DropDownCell, for: indexPath) as! DropDownCell
+        }
 
-		configureCell(cell, at: index)
-
-		return cell
+        let index = (indexPath as NSIndexPath).row
+        configureCell(cell, at: index)
+        return cell
 	}
 	
 	fileprivate func configureCell(_ cell: DropDownCell, at index: Int) {
@@ -1062,16 +1075,16 @@ extension DropDown: UITableViewDataSource, UITableViewDelegate {
 			cell.accessibilityIdentifier = localizationKeysDataSource[index]
 		}
 		
-		cell.optionLabel.textColor = textColor
-		cell.optionLabel.font = textFont
+		cell.optionLabel?.textColor = textColor
+		cell.optionLabel?.font = textFont
 		cell.selectedBackgroundColor = selectionBackgroundColor
         cell.highlightTextColor = selectedTextColor
         cell.normalTextColor = textColor
 		
 		if let cellConfiguration = cellConfiguration {
-			cell.optionLabel.text = cellConfiguration(index, dataSource[index])
+			cell.optionLabel?.text = cellConfiguration(index, dataSource[index])
 		} else {
-			cell.optionLabel.text = dataSource[index]
+			cell.optionLabel?.text = dataSource[index]
 		}
 		
 		customCellConfiguration?(index, dataSource[index], cell)

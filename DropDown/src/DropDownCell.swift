@@ -11,7 +11,7 @@ import UIKit
 open class DropDownCell: UITableViewCell {
 		
 	//UI
-	@IBOutlet open weak var optionLabel: UILabel!
+	@IBOutlet open weak var optionLabel: UILabel?
 	
 	var selectedBackgroundColor: UIColor?
     var highlightTextColor: UIColor?
@@ -52,10 +52,10 @@ extension DropDownCell {
 			if let selectedBackgroundColor = self.selectedBackgroundColor {
 				if selected {
 					self.backgroundColor = selectedBackgroundColor
-                    self.optionLabel.textColor = self.highlightTextColor
+                    self.optionLabel?.textColor = self.highlightTextColor
 				} else {
 					self.backgroundColor = .clear
-                    self.optionLabel.textColor = self.normalTextColor
+                    self.optionLabel?.textColor = self.normalTextColor
 				}
 			}
 		}
@@ -70,5 +70,4 @@ extension DropDownCell {
 
 		accessibilityTraits = selected ? .selected : .none
 	}
-	
 }
